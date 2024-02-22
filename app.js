@@ -9,8 +9,12 @@ const productRoute = require('./app/product/router');
 const categoryRoute = require('./app/category/router');
 const tagRoute = require('./app/tag/router');
 const authRoute = require('./app/auth/router');
-const deliveryAddressRoute = require('./app/deliveryAddress/router');
-const app = express();
+const deliveryAddressRoute = require('./app/DeliveryAddress/router');
+const cartRoute = require('./app/cart/router');
+const orderRoute = require('./app/order/router');
+const invoiceRoute = require('./app/invoice/router');
+
+var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,6 +34,9 @@ app.use('/api', productRoute);
 app.use('/api', categoryRoute);
 app.use('/api', tagRoute);
 app.use('/api', deliveryAddressRoute);
+app.use('/api', cartRoute);
+app.use('/api', orderRoute);
+app.use('/api', invoiceRoute);
 
 // Home route
 app.use('/', function (req, res) {

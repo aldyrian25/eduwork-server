@@ -1,3 +1,6 @@
+const { subject } = require('@casl/ability');
+const { policyFor } = require('../../utils');
+
 const DeliveryAddress = require('./model');
 
 const store = async (req, res, next) => {
@@ -20,27 +23,30 @@ const store = async (req, res, next) => {
 };
 const index = async (req, res, next) => {
     try {
-        const user = req.user;
-        const deliveryAddresses = await DeliveryAddress.find({ user: user._id });
-        return res.json(deliveryAddresses);
+        let {skip = 0, limit = 10} = req.query;
+        let count = await DeliveryAddress.find({user: req.user._id}).countDocuments();
+        let address = await DeliveryAddress.find({user: req.user._id}).skip(parseInt(skip)).limit(parseInt(limit).sort('-createdAt'));
+        return res.json({data: address, count});
     } catch (err) {
         next(err);
     }
 };
 
 const update = async (req, res, next) => {
+    let policy = policyFor(req.user);
     try {
-        const { id } = req.params;
-        const payload = req.body;
-        const user = req.user;
-
-        const updatedAddress = await DeliveryAddress.findOneAndUpdate({ _id: id, user: user._id }, payload, { new: true });
-
-        if (!updatedAddress) {
-            return res.status(404).json({ error: 1, message: 'Alamat pengiriman tidak ditemukan' });
+        let {_id, ...payload} = req.body;
+        let { id } = req.params;
+        let address = await DeliveryAddress.findById(id);
+        let subjectAddress = subject('DeliveryAddress', {...address, user_id: address.user});
+        if(!policy.can('update', subjectAddress)){
+            return res.json({
+                error: 1,
+                message: `You're not allowed to modify this resource`
+            });
         }
-
-        return res.json(updatedAddress);
+        address = await DeliveryAddress.findByIdAndUpdate(id, payload, {new: true, runValidators: true});
+        return res.json(address);
     } catch (err) {
         if (err && err.name === 'ValidationError') {
             return res.status(400).json({
@@ -55,16 +61,18 @@ const update = async (req, res, next) => {
 
 const destroy = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        const user = req.user;
-
-        const deletedAddress = await DeliveryAddress.findOneAndDelete({ _id: id, user: user._id });
-
-        if (!deletedAddress) {
-            return res.status(404).json({ error: 1, message: 'Alamat pengiriman tidak ditemukan' });
+        let { id } = req.params;
+        let address = await DeliveryAddress.findById(id);
+        let subjectAddress = subject('DeliveryAddress', {...address, user_id: address.user});
+        let policy = policyFor(req.user);
+        if(!policy.can('delete', subjectAddress)){
+            return res.json({
+                error: 1,
+                message: `You're not allowed to modify this resource`
+            });
         }
-
-        return res.json(deletedAddress);
+        address = await DeliveryAddress.findByIdAndDelete(id);
+        res.json(address);
     } catch (err) {
         next(err);
     }
