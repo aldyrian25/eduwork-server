@@ -40,4 +40,6 @@ const invoiceSchema = Schema({
     }
 }, {timestamps: true});
 
+
+
 module.exports = model('Invoice', invoiceSchema);

@@ -14,7 +14,7 @@ const cartRoute = require('./app/cart/router');
 const orderRoute = require('./app/order/router');
 const invoiceRoute = require('./app/invoice/router');
 
-var app = express();
+const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -68,3 +68,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
